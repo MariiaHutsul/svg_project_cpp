@@ -98,5 +98,5 @@ namespace svg
     };
 
 }
-#endif
+#endif __svg_SVGElements_hpp__
 
