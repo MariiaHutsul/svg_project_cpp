@@ -26,7 +26,7 @@ namespace svg
                  std::vector<SVGElement *> &svg_elements);
     void convert(const std::string &svg_file,
                  const std::string &png_file);
-    //ijaidjijsaido
+    
     class Ellipse : public SVGElement
     {
     public:
