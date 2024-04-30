@@ -41,4 +41,3 @@ namespace svg
 }
 #endif
 
-// coene
