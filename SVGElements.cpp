@@ -40,7 +40,7 @@ namespace svg
     : x1(x1), y1(y1), x2(x2), y2(y2), stroke(stroke) {}
     void Line::draw(PNGImage &img) const
     {
-        img.draw_line(center, radius, fill);
+        img.draw_line(x1,x2,y1,y2,stroke);
     }
 
 
