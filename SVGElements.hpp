@@ -40,23 +40,18 @@ namespace svg
     };
 
 
-     class Circle: public SVGElement 
+     class Circle: public Ellipse 
     {
     public:
-        Circle(const Point& cx, const Point& cy, const double& r, std::string fill);
+        Circle(const Point &center, const double &r, const Color &fill);
         void draw(PNGImage &img) const override;
-
-    private:
-        Point cx,cy;
-        double r;
-        std::string fill;
     };
 
 
     class Polyline : public SVGElement
     {
     public:
-        Polyline(const std::vector<Point>& points, const Color& stroke);
+        Polyline(const std::vector<Point> &points, const Color& stroke);
         void draw(PNGImage &img) const override;
 
     private:
@@ -67,18 +62,18 @@ namespace svg
     class Line : public SVGElement
     {
     public:
-        Line(const Point& x1, const Point& y1, const Point& x2, const Point& y2, std::string stroke);
+        Line(const Point& p1, const Point& p2, const Color &stroke);
         void draw(PNGImage &img) const override;
     private:
-        Point x1,x2,y1,y2;
-        std::string stroke;
+        Point p1, p2;
+        Color stroke;
     };
 
 
     class Polygon : public SVGElement
     {
     public:
-        Polygon(const std::vector<Point>& points, const Color& fill);
+        Polygon(const std::vector<Point> &points, const Color &fill);
         void draw(PNGImage &img) const override;
 
     private:
@@ -89,14 +84,14 @@ namespace svg
     class Rect : public SVGElement
     {
     public:
-        Rect(const Point& x, const Point& y, const double& rx, const double& ry, const double& width, const double& height, std::string stroke);
+        Rect(const Point &topLeft, const double &width, const double &height, const Color &stroke);
         void draw(PNGImage &img) const override;
-    private:
-        Point x,y;
-        double rx,ry, width, height;
-        std::string stroke;
-    };
 
+    private:
+        Point topLeft;
+        double width, height;
+        Color stroke;
+    };
 }
 #endif __svg_SVGElements_hpp__
 
