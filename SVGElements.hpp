@@ -42,7 +42,7 @@ namespace svg {
     };
 
 
-     class Circle: public SVGElement 
+    class Circle: public SVGElement 
     {
     public:
         Circle(const Point& cx, const Point& cy, const double& r, std::string fill);
@@ -138,6 +138,9 @@ namespace svg {
 
         return Point{scaledX, scaledY};
     }
+    
+    
+
 }
 #endif __svg_SVGElements_hpp__
 
