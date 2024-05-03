@@ -6,8 +6,10 @@
 #include "Point.hpp"
 #include "PNGImage.hpp"
 
-namespace svg
-{
+#include <iostream>  // New
+using namespace std; // New
+
+namespace svg {
     class SVGElement
     {
 
@@ -97,6 +99,45 @@ namespace svg
         std::string stroke;
     };
 
+
+    // Translate a point
+    Point Point::translate(const Point &t) const {
+        int dx, dy;
+        std::cin >> dx >> dy;
+        Point translatedPoint;
+        translatedPoint.x = (t).x + dx;
+        translatedPoint.y = (t).y + dy;
+        return translatedPoint;
+    }
+
+    // Rotate a point
+    Point Point::rotate(const Point &origin, int degrees) const {
+        double radians = degrees * 3.1416 / 180.0;
+
+        int translatedX = this->x - origin.x;
+        int translatedY = this->y - origin.y;
+
+        int rotatedX = translatedX * cos(radians) - translatedY * sin(radians);
+        int rotatedY = translatedX * sin(radians) + translatedY * cos(radians);
+
+        rotatedX += origin.x;
+        rotatedY += origin.y;
+
+        return Point{rotatedX, rotatedY};
+    }
+
+    // Scale a point
+    Point Point::scale(const Point &origin, int v) const {
+        int translatedX = this->x - origin.x;
+        int translatedY = this->y - origin.y;
+
+        int scaledX = translatedX * v;
+        int scaledY = translatedY * v;
+        scaledX += origin.x;
+        scaledY += origin.y;
+
+        return Point{scaledX, scaledY};
+    }
 }
 #endif __svg_SVGElements_hpp__
 
