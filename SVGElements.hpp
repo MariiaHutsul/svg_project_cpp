@@ -41,7 +41,6 @@ namespace svg {
         Point radius;
     };
 
-
     class Circle: public SVGElement 
     {
     public:
@@ -138,9 +137,6 @@ namespace svg {
 
         return Point{scaledX, scaledY};
     }
-    
-    
-
 }
 #endif __svg_SVGElements_hpp__
 
