@@ -15,6 +15,11 @@ namespace svg
         SVGElement();
         virtual ~SVGElement();
         virtual void draw(PNGImage &img) const = 0;
+        virtual Color get_color() = 0;
+        virtual std::vector<Point> get_points() = 0;
+        virtual Point get_center() = 0;
+        virtual Point get_radius() = 0;
+        virtual const string get_name() = 0;
     };
 
     // Declaration of namespace functions
@@ -32,6 +37,11 @@ namespace svg
     public:
         Ellipse(const Color &fill, const Point &center, const Point &radius);
         void draw(PNGImage &img) const override;
+        Color get_color() override final{return fill;};
+        Point get_center() override final{return center;};
+        Point get_radius() override final{return radius;};
+        std::vector<Point> get_points() override final;
+        const string get_name() override final{return "ellipse";};
 
     private:
         Color fill;
@@ -39,59 +49,38 @@ namespace svg
         Point radius;
     };
 
-
-     class Circle: public Ellipse 
-    {
-    public:
-        Circle(const Point &center, const double &r, const Color &fill);
-        void draw(PNGImage &img) const override;
-    };
-
-
     class Polyline : public SVGElement
     {
     public:
         Polyline(const std::vector<Point> &points, const Color& stroke);
         void draw(PNGImage &img) const override;
-
+        Color get_color() override final{return stroke;};
+        std::vector<Point> get_points() override final{return points;};
+        Point get_center() override final;
+        Point get_radius() override final;
+        const string get_name() override final{return "polyline";};
+        
     private:
         std::vector<Point> points;
         Color stroke;
     };
-
-    class Line : public SVGElement
-    {
-    public:
-        Line(const Point& p1, const Point& p2, const Color &stroke);
-        void draw(PNGImage &img) const override;
-    private:
-        Point p1, p2;
-        Color stroke;
-    };
-
 
     class Polygon : public SVGElement
     {
     public:
         Polygon(const std::vector<Point> &points, const Color &fill);
         void draw(PNGImage &img) const override;
+        Color get_color() override final{return fill;};
+        std::vector<Point> get_points() override final{return points;};
+        Point get_center() override final;
+        Point get_radius() override final;
+        const string get_name() override final{return "polygon";};
 
     private:
         std::vector<Point> points;
         Color fill;
     };
 
-    class Rect : public SVGElement
-    {
-    public:
-        Rect(const Point &topLeft, const double &width, const double &height, const Color &stroke);
-        void draw(PNGImage &img) const override;
-
-    private:
-        Point topLeft;
-        double width, height;
-        Color stroke;
-    };
 }
 #endif __svg_SVGElements_hpp__
 
