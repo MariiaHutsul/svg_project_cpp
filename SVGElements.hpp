@@ -6,8 +6,10 @@
 #include "Point.hpp"
 #include "PNGImage.hpp"
 
-namespace svg
-{
+#include <iostream>  // New
+using namespace std; // New
+
+namespace svg {
     class SVGElement
     {
 
