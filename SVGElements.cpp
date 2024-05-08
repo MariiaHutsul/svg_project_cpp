@@ -1,5 +1,10 @@
+#include <iostream>
+
 #include "SVGElements.hpp"
 #include "PNGImage.cpp"
+#include "Point.hpp"
+
+using namespace std;
 
 namespace svg
 {
@@ -7,7 +12,7 @@ namespace svg
     SVGElement::SVGElement() {}
     SVGElement::~SVGElement() {}
 
-    // Ellipse (initial code provided)
+    // Implementation of Ellipse class
     Ellipse::Ellipse(const Color &fill,
                      const Point &center,
                      const Point &radius)
@@ -18,39 +23,68 @@ namespace svg
     {
         img.draw_ellipse(center, radius, fill);
     }
-    // @todo provide the implementation of SVGElement derived classes
-    // Circle
-
-    Circle::Circle(const Point& cx, const Point& cy,  const double& r, std::string fill): cx(cx), cy(cy), r(r), fill(fill) {}
-    void Circle::draw(PNGImage &img) const
-    {
-        // Draw the circle on the PNGImage
-        // For simplicity, drawing a circle can be achieved by drawing an ellipse with equal radii
-        Point radius_point = {static_cast<int>(r), static_cast<int>(r)};
-        img.draw_ellipse(cx, radius_point, parse_color(fill));
+    Color Ellipse::get_color() {
+        return fill;
+    }
+    std::vector<Point> Ellipse::get_points() {
+        return {}; // Ellipse does not have points
+    }
+    Point Ellipse::get_center() {
+        return center;
+    }
+    Point Ellipse::get_radius() {
+        return radius;
+    }
+    const string Ellipse::get_name(){
+        return "ellipse";
     }
 
+    // Implementation of Circle class
+    Circle::Circle(const Color &fill, const Point &center, int radius)
+        : Ellipse(fill, center, {radius, radius}) {}
 
+    // Implementation of Polyline class
     Polyline::Polyline(const std::vector<Point>& points, const Color& stroke)
         : points(points), stroke(stroke) {}
 
     void Polyline::draw(PNGImage &img) const
     {
-        // Draw the polyline on the PNGImage
+        // Draw the line segments of the polyline
         for (size_t i = 0; i < points.size() - 1; ++i) {
             img.draw_line(points[i], points[i + 1], stroke);
         }
     }
 
-
-    Line::Line(const Point& x1, const Point& y1, const Point& x2, const Point& y2, std::string stroke)
-    : x1(x1), y1(y1), x2(x2), y2(y2), stroke(std::move(stroke)) {}
-    void Line::draw(PNGImage &img) const
-    {
-        // Draw the line on the PNGImage
-        img.draw_line(x1, x2, parse_color(stroke));
+    Color Polyline::get_color() {
+        return stroke;
     }
 
+    Point Polyline::get_center() {
+        //Calculate the centriod of the polyline
+        int sum_x = 0, sum_y = 0;
+        for (const auto &point : points) {
+            sum_x += point.x;
+            sum_y += point.y;
+        }
+        return {sum_x / points.size(), sum_y / points.size()};
+    }
+
+    Point Polyline::get_radius(){
+         return {0, 0}; // Not applicable for Polyline
+    }
+
+    std::vector<Point> Polyline::get_points() {
+        return points;
+    }
+
+    const string Polyline::get_name() {
+        return "polyline";
+    }
+
+    Line::Line(const Point &start, const Point &end, const Color &stroke)
+        : Polyline({start, end}, stroke) {}
+
+    // Implementation of Polygon class
 
     Polygon::Polygon(const std::vector<Point>& points, const Color& fill)
         : points(points), fill(fill) {}
@@ -59,17 +93,36 @@ namespace svg
     {
         img.draw_polygon(points, fill);
     }
-
-
-    Rect::Rect(const Point& x, const Point& y, const double& rx, const double& ry, const double& width, const double& height, std::string stroke)
-    : x(x), y(y), rx(rx), ry(ry), width(width), height(height), stroke(std::move(stroke)) {}
-    void Rect::draw(PNGImage &img) const {
-        // Draw the rectangle on the PNGImage
-        // For simplicity, drawing a rectangle can be achieved by drawing a polygon with four points
-        std::vector<Point> rect_points = {x, {x.x + static_cast<int>(width), x.y},
-                                          {x.x + static_cast<int>(width), x.y + static_cast<int>(height)},
-                                          {x.x, x.y + static_cast<int>(height)}};
-        img.draw_polygon(rect_points, parse_color(stroke));
+    Color Polygon::get_color() {
+        return fill;
     }
+
+    Point Polygon::get_center() {
+        // Calculate the centroid of the polygon
+        int sum_x = 0, sum_y = 0;
+        for (const auto &point : points) {
+            sum_x += point.x;
+            sum_y += point.y;
+        }
+        return {sum_x / points.size(), sum_y / points.size()};
+    }
+
+    Point Polygon::get_radius() {
+        return {0, 0}; // Not applicable for Polygon
+    }
+
+    std::vector<Point> Polygon::get_points() {
+        return points;
+    }
+
+    const string Polygon::get_name() {
+        return "polygon";
+    }
+
+    // Implementation of Rectangle class
+    Rectangle::Rectangle(const Point& top_left, int width, int height, const Color& fill)
+        : Polygon({top_left, {top_left.x + width, top_left.y},
+                   {top_left.x + width, top_left.y + height}, {top_left.x, top_left.y + height}},
+                  fill) {}
 
 }

@@ -51,6 +51,15 @@ namespace svg {
         Point radius;
     };
 
+    class Circle : public Ellipse
+    {
+    public:
+        Circle(const Color& fill, const Point& center, int radius);
+        std::string Circle::get_name() const {
+            return "circle";
+        }
+    };
+
     class Polyline : public SVGElement
     {
     public:
@@ -65,6 +74,14 @@ namespace svg {
     private:
         std::vector<Point> points;
         Color stroke;
+    };
+
+    class Line : public Polyline {
+    public:
+        Line(const Point &start, const Point &end, const Color &stroke);
+        std::string Line::get_name() const {
+        return "line";
+        }
     };
 
     class Polygon : public SVGElement
@@ -123,6 +140,14 @@ namespace svg {
         void draw_polygon(const std::vector<Point> &points, const Color &fill);
 
     }
+    class Rectangle : public Polygon
+    {
+    public:
+        Rectangle(const Point &top_left, int width, int height, const Color &fill);
+        std::string Rectangle::get_name() const {
+            return "rectangle";
+            }
+    };
 
     std::vector<Point> Ellipse::get_points() {
         return {};
@@ -142,5 +167,5 @@ namespace svg {
     }
 }
 
-#endif __svg_SVGElements_hpp__
+#endif 
 
