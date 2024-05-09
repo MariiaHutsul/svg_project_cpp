@@ -10,12 +10,12 @@ using namespace tinyxml2;
 
 namespace svg
 {   
-    void shape_translate(string shape, SVGElement* svg_element, string value){
+    void shape_translate(string shape, SVGElement*& svg_element, string value){
         // For Polylines and Polygons translate all points in vector
         // For Ellipses it's only required to translate the center
 
         // Getting translation value
-        istringstream in(value);
+        std::istringstream in(value);
         int x, y;
         in >> x >> y;
         Point t = {x,y};
@@ -25,9 +25,8 @@ namespace svg
             Color fill = svg_element -> get_color();
             Point center = svg_element -> get_center();
             Point radius = svg_element -> get_radius();
-            delete svg_element;
             center.translate(t);
-            SVGElement* svg_element = new Ellipse(fill,center, radius); // Creating new svg_element with the updated center
+            svg_element = new Ellipse(fill,center, radius); // Creating new svg_element with the updated center
         }
         else{
             Color c = svg_element -> get_color();
@@ -36,16 +35,16 @@ namespace svg
             for( Point& p : points){
                 p.translate(t);
             }
-            if(shape == "rectangle" or shape == "polygon"){SVGElement* svg_element = new Polygon(points, c);}
-            else{SVGElement* svg_element = new Polyline(points, c);}        // Creating new svg_element with the updated points
+            if(shape == "rectangle" or shape == "polygon"){svg_element = new Polygon(points, c);}
+            else{svg_element = new Polyline(points, c);}        // Creating new svg_element with the updated points
         }
     }
 
-    void shape_rotate(string shape, SVGElement* svg_element, string value, Point origin){
+    void shape_rotate(string shape, SVGElement*& svg_element, string value, Point origin){
         //  For all shapes rotate points with defined function
 
         // Getting the angle to rotate
-        istringstream in(value);
+        std::istringstream in(value);
         int angle;
         in >> angle;
 
@@ -54,27 +53,25 @@ namespace svg
             Color fill = svg_element -> get_color();
             Point center = svg_element -> get_center();
             Point radius = svg_element -> get_radius();
-            delete svg_element;
             center.rotate(origin, angle);
-            SVGElement* svg_element = new Ellipse(fill, center, radius);    // Creating new svg_element with the updated center
+            svg_element = new Ellipse(fill, center, radius);    // Creating new svg_element with the updated center
         }
         else{
             Color c = svg_element -> get_color();
             std::vector<Point> points = svg_element -> get_points();
-            delete svg_element;
             for( Point& p : points){
                 p.rotate(origin, angle);
             }
-            if(shape == "rectangle" or shape == "polygon"){SVGElement* svg_element = new Polygon(points, c);}
-            else{SVGElement* svg_element = new Polyline(points, c);}        // Creating new svg_element with the updated points
+            if(shape == "rectangle" or shape == "polygon"){svg_element = new Polygon(points, c);}
+            else{svg_element = new Polyline(points, c);}        // Creating new svg_element with the updated points
         } 
     }
     
-    void shape_scale(string shape, SVGElement* svg_element, string value, Point origin){
+    void shape_scale(string shape, SVGElement*& svg_element, string value, Point origin){
         // Scale all points for polygons and polylines, for ellipses scale the center as well as the radius
 
         // Getting the scaling factor
-        istringstream in(value);
+        std::istringstream in(value);
         int factor;
         in >> factor;
 
@@ -83,20 +80,18 @@ namespace svg
             Color fill = svg_element -> get_color();
             Point center = svg_element -> get_center();
             Point radius = svg_element -> get_radius();
-            delete svg_element;
             center.scale(origin, factor);
             radius.scale(origin,factor);
-            SVGElement* svg_element = new Ellipse(fill, center, radius);    // Creating new svg_element with the updated center and radius
+            svg_element = new Ellipse(fill, center, radius);    // Creating new svg_element with the updated center and radius
         }
         else{
             Color c = svg_element -> get_color();
             std::vector<Point> points = svg_element -> get_points();
-            delete svg_element;
             for( Point& p : points){
                 p.scale(origin, factor);
             }
-            if(shape == "rectangle" or shape == "polygon"){SVGElement* svg_element = new Polygon(points, c);}
-            else{SVGElement* svg_element = new Polyline(points, c);}        // Creating new svg_element with the updated points
+            if(shape == "rectangle" or shape == "polygon"){svg_element = new Polygon(points, c);}
+            else{svg_element = new Polyline(points, c);}        // Creating new svg_element with the updated points
         } 
     }
 
@@ -116,20 +111,20 @@ namespace svg
                 // Check for transformation
                 string transformation_;
                 if (child->Attribute("transform")){
-                    string transformation_ = child->Attribute("transform");
+                    transformation_ = child->Attribute("transform");
                 }
 
                 // Check for origin
                 Point o;
                 if(child->Attribute("transform-origin")){
                     string origin = child->Attribute("transform-origin");
-                    istringstream in(origin);
+                    std::istringstream in(origin);
                     int x, y;
                     in >> x >> y;
-                    Point o = {x,y};
+                    o = {x,y};
                 }
                 else{
-                    Point o = {0,0};    // Default transform origin
+                    o = {0,0};    // Default transform origin
                 }
                 
                 // Recursively process nested groups
@@ -153,7 +148,7 @@ namespace svg
                     Point center = {cx, cy};
                     Point radius = {rx,ry};
                     // Creating ellipse
-                    SVGElement* svg_element = new Ellipse(fill,center, radius);
+                    svg_element = new Ellipse(fill,center, radius);
                 }
                 else if(shape == "circle"){
                     // Getting the attributes for circle
@@ -166,14 +161,14 @@ namespace svg
                     Point center = {cx, cy};
                     Point radius = {r,r};
                     // Creating circle
-                    SVGElement* svg_element = new Ellipse(fill,center, radius);  // Circle is a particular type of Ellipse
+                    svg_element = new Ellipse(fill,center, radius);  // Circle is a particular type of Ellipse
                 }
                 else if(shape == "polyline"){
                     // Getting the attributes for polyline
                     string p = child ->Attribute("points");
-                    istringstream in(p);
+                    std::istringstream in(p);
                     std::vector<Point> points;
-                    float x, y;
+                    int x, y;
                     char c;
                     while (in >> x >> c >> y) {     // Using istringstream to get the coordinates of the point on the string
                         Point p = {x,y};            
@@ -183,7 +178,7 @@ namespace svg
                     string stroke_ = child->Attribute("stroke");
                     Color stroke = parse_color(stroke_);
                     // Creating polyline
-                    SVGElement* svg_element = new Polyline(points, stroke);
+                    svg_element = new Polyline(points, stroke);
                 }
                 else if(shape == "line"){
                     // Getting the attributes for line
@@ -198,12 +193,12 @@ namespace svg
                     string stroke_ = child->Attribute("stroke");
                     Color stroke = parse_color(stroke_);
                     // Creating line
-                    SVGElement* svg_element = new Polyline(points, stroke);     // Line is a particular type of Polyline
+                    svg_element = new Polyline(points, stroke);     // Line is a particular type of Polyline
                 }
                 else if(shape == "polygon"){
                     // Getting the attributes for polygon
                     string p = child ->Attribute("points");
-                    istringstream in(p);
+                    std::istringstream in(p);
                     std::vector<Point> points;
                     int x, y;
                     char c;
@@ -215,7 +210,7 @@ namespace svg
                     string fill_ = child->Attribute("fill");
                     Color fill = parse_color(fill_);
                     // Creating polygon
-                    SVGElement* svg_element = new Polygon(points, fill);
+                    svg_element = new Polygon(points, fill);
                 }
                 else if(shape == "rectangle"){
                     // Getting the attributes for rectangle
@@ -232,7 +227,7 @@ namespace svg
                     string fill_ = child->Attribute("fill");
                     Color fill = parse_color(fill_);
                     // Creating rectangle
-                    SVGElement* svg_element = new Polygon(points, fill);    // Rectangle is a particular type of Polygon
+                    svg_element = new Polygon(points, fill);    // Rectangle is a particular type of Polygon
                 }
 
                 // Check for transformations
@@ -242,19 +237,19 @@ namespace svg
                     size_t i = transformation_.find("(");
                     string transformation = transformation_.substr(0, i);
                     transformation_.erase(0,i);     // Only keep the value of transformation on the string
-                    replace(transformation_.begin(), transformation_.end(), ',', ' ');
+                    std::replace(transformation_.begin(), transformation_.end(), ',', ' ');
 
                     // Check for origin
                     Point o;
                     if(child->Attribute("transform-origin")){
                         string origin = child->Attribute("transform-origin");
-                        istringstream in(origin);
+                        std::istringstream in(origin);
                         int x, y;
                         in >> x >> y;
-                        Point o = {x,y};
+                        o = {x,y};
                     }
                     else{
-                        Point o = {0,0};    // Default transform origin
+                        o = {0,0};    // Default transform origin
                     }
 
                     if(transformation == "translate"){
@@ -266,13 +261,14 @@ namespace svg
                     else if(transformation == "scale"){
                         shape_scale(shape, svg_element, transformation_, o);
                     }
-
-                // Add object to vector
-                group_elements.push_back(svg_element);
+                    
                 }
+                // Add object to vector
+                if(svg_element != nullptr){group_elements.push_back(svg_element);}
+                
             }
         }
-        for(SVGElement*& element : group_elements) {
+        for(auto& element : group_elements) {
             if(group_transformation == "translate"){
                 shape_translate(element -> get_name(), element, group_transformation);
             }
@@ -282,7 +278,7 @@ namespace svg
             else if(group_transformation == "scale"){
                 shape_scale(element -> get_name(), element, group_transformation, group_origin);
             }
-            parent_group.push_back(element);
+            if(element != nullptr){parent_group.push_back(element);}
         }
         
     }
@@ -311,7 +307,27 @@ namespace svg
 
             // Check for groups
             if(shape == "g"){
-                groups(child, svg_elements);
+                // Check for transformation
+                string transformation_;
+                if (child->Attribute("transform")){
+                    transformation_ = child->Attribute("transform");
+                }
+
+                // Check for origin
+                Point o;
+                if(child->Attribute("transform-origin")){
+                    string origin = child->Attribute("transform-origin");
+                    std::istringstream in(origin);
+                    int x, y;
+                    in >> x >> y;
+                    o = {x,y};
+                }
+                else{
+                    o = {0,0};    // Default transform origin
+                }
+                
+                // Function to recursively process nested groups
+                groups(child,svg_elements,transformation_, o);
             }
 
             // Create the correct class for the shape
@@ -327,7 +343,7 @@ namespace svg
                 Point center = {cx, cy};
                 Point radius = {rx,ry};
                 // Creating ellipse
-                SVGElement* svg_element = new Ellipse(fill,center, radius);
+                svg_element = new Ellipse(fill,center, radius);
             }
             else if(shape == "circle"){
                 // Getting the attributes for circle
@@ -335,19 +351,19 @@ namespace svg
                 int cy = child->IntAttribute("cy");
                 int r = child->IntAttribute("r");
                 const char* color = child->Attribute("fill");
-
+        
                 Color fill = parse_color(color);
                 Point center = {cx, cy};
                 Point radius = {r,r};
                 // Creating circle
-                SVGElement* svg_element = new Ellipse(fill,center, radius);  // Circle is a particular type of Ellipse
+                svg_element = new Ellipse(fill,center, radius);  // Circle is a particular type of Ellipse
             }
             else if(shape == "polyline"){
                 // Getting the attributes for polyline
                 string p = child ->Attribute("points");
                 istringstream in(p);
                 std::vector<Point> points;
-                float x, y;
+                int x, y;
                 char c;
                 while (in >> x >> c >> y) {     // Using istringstream to get the coordinates of the point on the string
                     Point p = {x,y};            
@@ -357,7 +373,7 @@ namespace svg
                 string stroke_ = child->Attribute("stroke");
                 Color stroke = parse_color(stroke_);
                 // Creating polyline
-                SVGElement* svg_element = new Polyline(points, stroke);
+                svg_element = new Polyline(points, stroke);
             }
             else if(shape == "line"){
                 // Getting the attributes for line
@@ -372,7 +388,7 @@ namespace svg
                 string stroke_ = child->Attribute("stroke");
                 Color stroke = parse_color(stroke_);
                 // Creating line
-                SVGElement* svg_element = new Polyline(points, stroke);     // Line is a particular type of Polyline
+                svg_element = new Polyline(points, stroke);     // Line is a particular type of Polyline
             }
             else if(shape == "polygon"){
                 // Getting the attributes for polygon
@@ -389,7 +405,7 @@ namespace svg
                 string fill_ = child->Attribute("fill");
                 Color fill = parse_color(fill_);
                 // Creating polygon
-                SVGElement* svg_element = new Polygon(points, fill);
+                svg_element = new Polygon(points, fill);
             }
             else if(shape == "rectangle"){
                 // Getting the attributes for rectangle
@@ -406,7 +422,7 @@ namespace svg
                 string fill_ = child->Attribute("fill");
                 Color fill = parse_color(fill_);
                 // Creating rectangle
-                SVGElement* svg_element = new Polygon(points, fill);    // Rectangle is a particular type of Polygon
+                svg_element = new Polygon(points, fill);    // Rectangle is a particular type of Polygon
             }
 
             // Check for transformations
@@ -416,7 +432,7 @@ namespace svg
                 size_t i = transformation_.find("(");
                 string transformation = transformation_.substr(0, i);
                 transformation_.erase(0,i);     // Only keep the value of transformation on the string
-                replace(transformation_.begin(), transformation_.end(), ',', ' ');
+                std::replace(transformation_.begin(), transformation_.end(), ',', ' ');
 
                 // Check for origin
                 Point o;
@@ -425,10 +441,10 @@ namespace svg
                     istringstream in(origin);
                     int x, y;
                     in >> x >> y;
-                    Point o = {x,y};
+                    o = {x,y};
                 }
                 else{
-                    Point o = {0,0};    // Default transform origin
+                    o = {0,0};    // Default transform origin
                 }
 
                 if(transformation == "translate"){
@@ -443,7 +459,7 @@ namespace svg
             }
 
             // Add object to vector
-            svg_elements.push_back(svg_element);
+            if(svg_element != nullptr){svg_elements.push_back(svg_element);}
         }
     }
 }
