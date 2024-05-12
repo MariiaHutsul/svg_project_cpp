@@ -21,8 +21,6 @@ namespace svg
     // @todo provide the implementation of SVGElement derived classes
     // HERE -->
 
-
-
     Polyline::Polyline(const std::vector<Point>& points, const Color& stroke)
         : points(points), stroke(stroke) {}
     Polyline::~Polyline() {};
@@ -43,6 +41,4 @@ namespace svg
     {
         img.draw_polygon(points, fill);
     }
-
-
 }
