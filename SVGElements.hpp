@@ -7,11 +7,14 @@
 #include "PNGImage.hpp"
 
 #include <iostream>  // New
+#include <string>
 using namespace std; // New
 
-namespace svg {
+namespace svg 
+{
     class SVGElement
     {
+
     public:
         SVGElement();
         virtual ~SVGElement();
@@ -84,7 +87,5 @@ namespace svg {
         std::vector<Point> points;
         Color fill;
     };
-
 }
-
 #endif
