@@ -6,12 +6,15 @@
 #include "Point.hpp"
 #include "PNGImage.hpp"
 
-#include <iostream>  // New
-using namespace std; // New
+#include <iostream>
+#include <string>
+using namespace std;
 
-namespace svg {
+namespace svg
+{
     class SVGElement
     {
+
     public:
         SVGElement();
         virtual ~SVGElement();
@@ -20,7 +23,7 @@ namespace svg {
         virtual std::vector<Point> get_points() = 0;
         virtual Point get_center() = 0;
         virtual Point get_radius() = 0;
-        virtual const string get_name() = 0;
+        virtual const std::string get_name() = 0;
     };
 
     // Declaration of namespace functions
@@ -32,7 +35,7 @@ namespace svg {
                  std::vector<SVGElement *> &svg_elements);
     void convert(const std::string &svg_file,
                  const std::string &png_file);
-    
+
     class Ellipse : public SVGElement
     {
     public:
@@ -43,7 +46,7 @@ namespace svg {
         Point get_center() override final{return center;};
         Point get_radius() override final{return radius;};
         std::vector<Point> get_points() override final{return {};};
-        const string get_name() override final{return "ellipse";};
+        const std::string get_name() override final{return "ellipse";};
 
     private:
         Color fill;
@@ -61,7 +64,7 @@ namespace svg {
         std::vector<Point> get_points() override final{return points;};
         Point get_center() override final{return {0,0};};
         Point get_radius() override final{return {0,0};};
-        const string get_name() override final{return "polyline";};
+        const std::string get_name() override final{return "polyline";};
         
     private:
         std::vector<Point> points;
@@ -78,13 +81,11 @@ namespace svg {
         std::vector<Point> get_points() override final{return points;};
         Point get_center() override final{return {0,0};};
         Point get_radius() override final{return {0,0};};
-        const string get_name() override final{return "polygon";};
+        const std::string get_name() override final{return "polygon";};
 
     private:
         std::vector<Point> points;
         Color fill;
     };
-
 }
-
 #endif
