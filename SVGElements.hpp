@@ -6,11 +6,11 @@
 #include "Point.hpp"
 #include "PNGImage.hpp"
 
-#include <iostream>
+#include <iostream>  // New
 #include <string>
-using namespace std;
+using namespace std; // New
 
-namespace svg
+namespace svg 
 {
     class SVGElement
     {
