@@ -5,15 +5,44 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <map>
 
 using namespace std;
 using namespace tinyxml2;
 
 namespace svg
 {   
+    // Map to store the ids and corresponding references
+    std::map<std::string, std::vector<SVGElement*>> id_store;
+    
+    // Function to get the point in a string from the attribute "transform-origin"
+    Point t_origin(string origin){
+        istringstream in(origin);
+        int x, y;
+        in >> x >> y;
+        Point o = {x,y};
+        return o;
+    }
+
+    // Function to get the transformation and corresponding value from the attribute "transform"
+    pair<string, string> t_and_value(string t){
+        std::replace(t.begin(), t.end(), ',', ' ');
+        size_t startPos = t.find('(');
+        size_t endPos = t.find(')');
+
+        // Extract the substring between '(' and ')'
+        std::string value_ = t.substr(startPos + 1, endPos - startPos - 1);
+
+        // Extract the substring before '('
+        std::string transformation = t.substr(0, startPos);
+        pair<string, string> p = make_pair(transformation, value_);
+        return p;
+    }
+
+    // Function called to translate a shape 
     void shape_translate(string shape, SVGElement*& svg_element, string value){
         // For Polylines and Polygons translate all points in vector
-        // For Ellipses it's only required to translate the center
+        // For Ellipses it's only required to translate the center, as it is defined by center and radius (and color)
 
         // Getting translation value
         std::istringstream in(value);
@@ -44,8 +73,8 @@ namespace svg
         }
     }
 
+    // Function called to rotate a shape 
     void shape_rotate(string shape, SVGElement*& svg_element, string value, Point origin){
-        //  For all shapes rotate points with defined function
 
         // Getting the angle to rotate
         int angle;
@@ -74,11 +103,11 @@ namespace svg
         } 
     }
     
+    // Function called to scale a shape 
     void shape_scale(string shape, SVGElement*& svg_element, string value, Point origin){
         // Scale all points for polygons and polylines, for ellipses scale the center as well as the radius
 
         // Getting the scaling factor
-        // Convert the substring to an integer
         int factor;
         std::istringstream(value) >> factor;
 
@@ -106,23 +135,20 @@ namespace svg
         } 
     }
 
-    void groups(XMLElement *group,vector<SVGElement*>& parent_group,string group_transformation = "", Point group_origin = {0,0}){
+    void groups(XMLElement *group,vector<SVGElement*>& parent_group,string group_transformation = "", Point group_origin = {0,0}, string group_id = ""){
         // Process the current group
-        // Vector to store elements of the group
 
+        // Vector to store elements of the group
         vector<SVGElement*> group_elements;
 
         // Process children of the current group
         for (XMLElement* child = group->FirstChildElement(); child != nullptr; child = child->NextSiblingElement()) {
             // Getting the shape for the current node
             string shape = child->Name();
-
-            // svg_element inicialization
-            SVGElement* svg_element = nullptr;
             
             // Check for groups
             if(shape == "g"){
-                // Check for transformation
+                // Check for group transformation
                 string transformation_;
                 if (child->Attribute("transform")){
                     transformation_ = child->Attribute("transform");
@@ -131,27 +157,31 @@ namespace svg
                     transformation_ = "";
                 }
 
-                // Check for origin
-                Point o;
+                // Check for group origin
+                Point o = {0,0};    // Default transform origin
                 if(child->Attribute("transform-origin")){
-                    string origin = child->Attribute("transform-origin");
-                    std::istringstream in(origin);
-                    int x, y;
-                    in >> x >> y;
-                    o = {x,y};
+                    o = t_origin(child->Attribute("transform-origin"));
+                }
+
+                // Store the id in a variable
+                string id;
+                if(child -> Attribute("id")){
+                    id = child -> Attribute("id");
                 }
                 else{
-                    o = {0,0};    // Default transform origin
+                    id = "";    // No id
                 }
 
-                delete svg_element;
                 // Function to recursively process nested groups
-                groups(child,group_elements,transformation_, o);
+                groups(child,group_elements,transformation_, o,id);
             }
-            else {
-                // Process other shapes within the group
-                // Create the correct class for the shape
+            // Process other shapes within the group
+            else if (shape != "use"){
 
+                // svg_element inicialization
+                SVGElement* svg_element = nullptr;
+
+                // Create the correct class for the shape
                 if(shape == "ellipse"){
                     // Getting the attributes for ellipse
                     int cx = child->IntAttribute("cx");
@@ -250,30 +280,22 @@ namespace svg
                 // Check for transformations
 
                 if (child->Attribute("transform")){
+
+                    // Get the transformation and its value
                     string transformation_ = child->Attribute("transform");
-                    std::replace(transformation_.begin(), transformation_.end(), ',', ' ');
-                    size_t startPos = transformation_.find('(');
-                    size_t endPos = transformation_.find(')');
+                    
+                    pair<string, string> p = t_and_value(transformation_);
 
-                    // Extract the substring between '(' and ')'
-                    std::string value_ = transformation_.substr(startPos + 1, endPos - startPos - 1);
-
-                    // Extract the substring before '('
-                    std::string transformation = transformation_.substr(0, startPos);
+                    string transformation = p.first;
+                    string value_ = p.second;
 
                     // Check for origin
-                    Point o;
+                    Point o = {0,0};    // Default transform origin
                     if(child->Attribute("transform-origin")){
-                        string origin = child->Attribute("transform-origin");
-                        istringstream in(origin);
-                        int x, y;
-                        in >> x >> y;
-                        o = {x,y};
-                    }
-                    else{
-                        o = {0,0};    // Default transform origin
+                        o = t_origin(child->Attribute("transform-origin"));
                     }
 
+                    // Apply the corresponding operation
                     if(transformation == "translate"){
                         shape_translate(shape, svg_element, value_);
                     }
@@ -285,9 +307,81 @@ namespace svg
                     }
                 }
                 group_elements.push_back(svg_element);
+
+                // Reading id, if it exists 
+                if(child -> Attribute("id")){
+                    string id = child -> Attribute("id");
+                    id = "#" + id;     // Adding '#' in order to compare the id to href, that has a '#' in the beginning
+                    vector<SVGElement*> element;
+                    auto e = svg_element -> clone();
+                    element.push_back(e);
+                    id_store.insert({group_id , element});  
+                }
+            }
+
+            // Reading a "use" - The only remaining case for this project
+            else{
+                string ref = child -> Attribute("href");    // Getting the corresponding reference
+
+                // Storing all the pointers in a new vector as copies in order to avoid modifying them
+                vector<SVGElement*> c;
+
+                for (SVGElement* ptr : id_store[ref]) {
+                    string s = ptr -> get_name();
+                    SVGElement* newPtr;
+                    if(s == "ellipse"){ newPtr = new Ellipse(ptr -> get_color(), ptr -> get_center(), ptr -> get_radius());}
+                    else if(s == "polyline"){ newPtr = new Polyline(ptr -> get_points(), ptr -> get_color());}
+                    else { newPtr = new Polygon(ptr -> get_points(), ptr -> get_color());}
+
+                    c.push_back(newPtr);
+                }
+
+                if (child->Attribute("transform")){
+                    // Get the transformation and its value
+                    string transformation_ = child->Attribute("transform");
+                    
+                    pair<string, string> p = t_and_value(transformation_);
+
+                    string transformation = p.first;
+                    string value_ = p.second;
+
+                    // Check for origin
+                    Point o = {0,0};    // Default transform origin
+                    if(child->Attribute("transform-origin")){
+                        o = t_origin(child->Attribute("transform-origin"));
+                    }
+
+                    for(auto& e : c){
+                        if(transformation == "translate"){
+                            shape_translate(e -> get_name(), e, value_);
+                        }
+                        else if(transformation == "rotate"){
+                            shape_rotate(e -> get_name(), e, value_, o);
+                        }
+                        else if(transformation == "scale"){
+                            shape_scale(e -> get_name(), e, value_, o);
+                        }
+                    }
+                }
+
+                if(child -> Attribute("id")){
+                    string id = child -> Attribute("id");
+                    id = "#" + id;      // Adding '#' in order to compare the id to href, that always has a '#' in the beginning
+                    vector<SVGElement*> copy_elements;
+                    for(auto e_ : c){
+                        auto e = e_ -> clone();
+                        copy_elements.push_back(e);
+                    }
+                    id_store.insert({id , copy_elements});
+                }
+
+                for(auto e : c){
+                    group_elements.push_back(e);
+                }
             }
         }
 
+        // Getting and applying the group transformation
         string gp = "";
         string value_;
         if (group_transformation != ""){
@@ -313,7 +407,19 @@ namespace svg
             }
             parent_group.push_back(element);
         }
+
+        // Storing group id, if it exists
+        if(group_id != ""){
+            group_id = "#" + group_id;      // Adding '#' in order to compare the id to href, that always has a '#' in the beginning
+            vector<SVGElement*> copy_elements;
+            for(auto e_ : group_elements){
+                auto e = e_ -> clone();
+                copy_elements.push_back(e);
+            }
+            id_store.insert({group_id , copy_elements});
+        }
     }
+
     void readSVG(const string& svg_file, Point& dimensions, vector<SVGElement *>& svg_elements)
     {
         XMLDocument doc;
@@ -328,13 +434,10 @@ namespace svg
         dimensions.y = xml_elem->IntAttribute("height");
         
         // TODO complete code -->
-        
+
         for (XMLElement* child = xml_elem->FirstChildElement(); child != nullptr; child = child->NextSiblingElement()) {
             // Getting the shape for the current node
             string shape = child->Name();
-
-            // svg_element inicialization
-            SVGElement* svg_element = nullptr;
             
             // Check for groups
             if(shape == "g"){
@@ -348,25 +451,29 @@ namespace svg
                 }
 
                 // Check for origin
-                Point o;
+                Point o = {0,0};    // Default transform origin
                 if(child->Attribute("transform-origin")){
-                    string origin = child->Attribute("transform-origin");
-                    std::istringstream in(origin);
-                    int x, y;
-                    in >> x >> y;
-                    o = {x,y};
+                    o = t_origin(child->Attribute("transform-origin"));
+                }
+
+                // Store the id in a variable
+                string id;
+                if(child -> Attribute("id")){
+                    id = child -> Attribute("id");
                 }
                 else{
-                    o = {0,0};    // Default transform origin
+                    id = "";    // No id
                 }
 
-                delete svg_element;
                 // Function to recursively process nested groups
-                groups(child,svg_elements,transformation_, o);
+                groups(child,svg_elements,transformation_, o, id);
             }
+            else if (shape != "use") {
 
-            // Create the correct class for the shape
-            else{
+                // svg_element inicialization
+                SVGElement* svg_element = nullptr;
+
+                // Create the correct class for the shape
                 if(shape == "ellipse"){
                     // Getting the attributes for ellipse
                     int cx = child->IntAttribute("cx");
@@ -465,42 +572,113 @@ namespace svg
                 // Check for transformations
 
                 if (child->Attribute("transform")){
+                    // Get the transformation and its value
                     string transformation_ = child->Attribute("transform");
-                    std::replace(transformation_.begin(), transformation_.end(), ',', ' ');
-                    size_t startPos = transformation_.find('(');
-                    size_t endPos = transformation_.find(')');
+                    
+                    pair<string, string> p = t_and_value(transformation_);
 
-                    // Extract the substring between '(' and ')'
-                    std::string value_ = transformation_.substr(startPos + 1, endPos - startPos - 1);
-
-                    // Extract the substring before '('
-                    std::string transformation = transformation_.substr(0, startPos);
+                    string transformation = p.first;
+                    string value_ = p.second;
 
                     // Check for origin
-                    Point o;
+                    Point o = {0,0};    // Default transform origin
                     if(child->Attribute("transform-origin")){
-                        string origin = child->Attribute("transform-origin");
-                        istringstream in(origin);
-                        int x, y;
-                        in >> x >> y;
-                        o = {x,y};
-                    }
-                    else{
-                        o = {0,0};    // Default transform origin
+                        o = t_origin(child->Attribute("transform-origin"));
                     }
 
+                    // Apply the corresponding operation
                     if(transformation == "translate"){
-                        shape_translate(shape, svg_element, value_);
+                        shape_translate(svg_element -> get_name(), svg_element, value_);
                     }
                     else if(transformation == "rotate"){
-                        shape_rotate(shape, svg_element, value_, o);
+                        shape_rotate(svg_element -> get_name(), svg_element, value_, o);
                     }
                     else if(transformation == "scale"){
-                        shape_scale(shape, svg_element, value_, o);
+                        shape_scale(svg_element -> get_name(), svg_element, value_, o);
                     }
                 }
-                svg_elements.push_back(svg_element);
+                svg_elements.push_back(svg_element);    // Storing the element
+
+                // Reading id, if it exists
+                if(child -> Attribute("id")){
+                    string id = child -> Attribute("id");
+                    id = "#" + id;      // Adding '#' in order to compare the id to href, that has a '#' in the beginning
+                    vector<SVGElement*> element;
+                    SVGElement* e = svg_element -> clone();
+                    element.push_back(e);
+                    id_store.insert({id , element});
+                }
+            }
+
+            // Reading a "use" - The only remaining case for this project
+            else{
+                string ref = child -> Attribute("href");    // Getting the corresponding reference
+                
+                // Storing all the pointers in a new vector as copies in order to avoid modifying them
+                vector<SVGElement*> c;
+
+                for (SVGElement* ptr : id_store[ref]) {
+                    string s = ptr -> get_name();
+                    SVGElement* newPtr;
+                    if(s == "ellipse"){ newPtr = new Ellipse(ptr -> get_color(), ptr -> get_center(), ptr -> get_radius());}
+                    else if(s == "polyline"){ newPtr = new Polyline(ptr -> get_points(), ptr -> get_color());}
+                    else { newPtr = new Polygon(ptr -> get_points(), ptr -> get_color());}
+
+                    c.push_back(newPtr);
+                }
+
+                if (child->Attribute("transform")){
+                    // Get the transformation and its value
+                    string transformation_ = child->Attribute("transform");
+                    
+                    pair<string, string> p = t_and_value(transformation_);
+
+                    string transformation = p.first;
+                    string value_ = p.second;
+
+                    // Check for origin
+                    Point o = {0,0};    // Default transform origin
+                    if(child->Attribute("transform-origin")){
+                        o = t_origin(child->Attribute("transform-origin"));
+                    }
+
+                    for(auto& e : c){
+                        if(transformation == "translate"){
+                            shape_translate(e -> get_name(), e, value_);
+                        }
+                        else if(transformation == "rotate"){
+                            shape_rotate(e -> get_name(), e, value_, o);
+                        }
+                        else if(transformation == "scale"){
+                            shape_scale(e -> get_name(), e, value_, o);
+                        }
+                    }
+                }
+
+                if(child -> Attribute("id")){
+                    string id = child -> Attribute("id");
+                    id = "#" + id;      // Adding '#' in order to compare the id to href, that always has a '#' in the beginning
+                    vector<SVGElement*> copy_elements;
+                    for(auto e_ : c){
+                        SVGElement* e = e_ -> clone();
+                        copy_elements.push_back(e);
+                    }
+                    id_store.insert({id , copy_elements});
+                }
+
+                for(auto e : c){
+                    svg_elements.push_back(e);
+                }
             }
         }
+
+        // Deleting all the remaining pointers in the ids map to avoid memory leaks
+        for (auto& p : id_store){
+            auto v = p.second;
+            for(auto& e: v){
+                delete e;
+            }
+        }
+
     }
 }
