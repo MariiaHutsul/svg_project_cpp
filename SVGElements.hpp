@@ -24,6 +24,7 @@ namespace svg
         virtual Point get_center() = 0;
         virtual Point get_radius() = 0;
         virtual const std::string get_name() = 0;
+        virtual SVGElement* clone() = 0;
     };
 
     // Declaration of namespace functions
@@ -47,6 +48,7 @@ namespace svg
         Point get_radius() override final{return radius;};
         std::vector<Point> get_points() override final{return {};};
         const std::string get_name() override final{return "ellipse";};
+        Ellipse* clone() override final {return new Ellipse(fill, center, radius);}
 
     private:
         Color fill;
@@ -65,6 +67,7 @@ namespace svg
         Point get_center() override final{return {0,0};};
         Point get_radius() override final{return {0,0};};
         const std::string get_name() override final{return "polyline";};
+        Polyline* clone() override final {return new Polyline(points, stroke);}
         
     private:
         std::vector<Point> points;
@@ -82,6 +85,7 @@ namespace svg
         Point get_center() override final{return {0,0};};
         Point get_radius() override final{return {0,0};};
         const std::string get_name() override final{return "polygon";};
+        Polygon* clone() override final {return new Polygon(points, fill);}
 
     private:
         std::vector<Point> points;
