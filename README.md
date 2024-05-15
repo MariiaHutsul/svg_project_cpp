@@ -10,18 +10,22 @@
 
 ## Accomplished tasks
 
-### This project concerns the images from the SVG vectorial format to the PNG raster format.
+### This project concerns the conversion of images from the SVG vectorial format to the PNG raster format.
 ### The main task in this project is defining a hierarchy of C++ classes corresponding to SVG elements, and code for reading these elements. (  [read more](https://moodle2324.up.pt/pluginfile.php/189678/mod_resource/content/20/index.html) )  
-* ### ___The code is compiled with  Makefile___
-* ### ___In project directory, you can run [ $  make  ] to compile the project if everything is Ok or you can be able to see errors if something goings wrong___
-   + ### ___How undersand that everything is going Ok?___
-   + ### ___In terminal have to be:___
-     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -c -o svgtopng.o svgtopng.cpp 
+* ### ___The code is compiled with Makefile___
+* ### ___In the project directory, you can run [ $  make test ] to compile the project, if everything is Ok, or you will be able to see errors if something goes wrong___
+   + ### ___How to understand that it compiled properly?___
+   + ### ___In terminal it should be:___
+     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -c -o test.o test.cpp
      * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -c -o Color.o Color.cpp
-     * g++ -std=c++11  -pedantic -Wall
-     * ...
-     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -o xmldump xmldump.o libproj.a   
-* ### ___Launches the test runner [ $ ./test  ] and you be able to see in terminal == TEST EXECUTION SUMMARY == (also, you can see test_log.txt for details)___
+     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -c -o Point.o Point.cpp
+     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -c -o PNGImage.o PNGImage.cpp
+     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -c -o SVGElements.o SVGElements.cpp
+     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -c -o readSVG.o readSVG.cpp
+     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -c -o convert.o convert.cpp
+     * ar cr libproj.a external/tinyxml2/tinyxml2.o Color.o Point.o PNGImage.o Point.o SVGElements.o readSVG.o convert.o 
+     * g++ -std=c++11  -pedantic -Wall -Wuninitialized -Werror -g -fsanitize=address -fsanitize=undefined -o test test.o libproj.a   
+* ### ___[ $ ./test  ] Launches the test runner and you will be able to see in terminal == TEST EXECUTION SUMMARY == (also, you can see test_log.txt for details)___
 ## ___Useful references___
 + ### SVG 
    + [Reference (mozilla.org)](https://developer.mozilla.org/en-US/docs/Web/SVG)
