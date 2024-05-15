@@ -539,11 +539,25 @@ namespace svg
                     std::vector<Point> points;
                     istringstream in(s);
                     
-                    char c;
+                    // char c;
                     Point p;
 
+                    /*
                     while (in >> p.x >> c >> p.y) {  // Using istringstream to get the coordinates of the points on the string
                         points.push_back(p);
+                    }
+                    */
+                   
+                    while (in >> p.x) {
+                        if (in.peek() == ',') {
+                             in.ignore();
+                        }
+                        if (in >> p.y) {
+                             points.push_back(p);
+                        }
+                        if (in.peek() == ','){
+                            in.ignore();
+                        }
                     }
         
                     string fill_ = child->Attribute("fill");

@@ -17,7 +17,6 @@
 >>>> [17] line_2 <<<<
 >>>> [18] lion <<<<
 >>>> [19] polygon_1 <<<<
-pixel (1 0): expected 255 0 0 got 255 255 255
 >>>> [20] polygon_2 <<<<
 >>>> [21] polyline_1 <<<<
 >>>> [22] polyline_2 <<<<
