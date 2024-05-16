@@ -55,7 +55,7 @@
 + #### Third-Party Libraries Integration: 
   the tinyxml2 library for parsing XML files, extending the functionality of the program by leveraging external libraries.
 
-Conclusion:
++ ### Conclusion:
 This project demonstrates a deep understanding of C++ programming concepts, including object-oriented design, efficient memory management, and robust error handling. By leveraging both the Standard Template Library and third-party libraries, the team successfully created a functional and efficient tool for converting SVG files to PNG format. The project also highlights the importance of thorough testing and debugging in ensuring software reliability and performance.
 
 
