@@ -15,7 +15,9 @@ namespace svg
     // Map to store the ids and corresponding references
     std::map<std::string, std::vector<SVGElement*>> id_store;
     
-    // Function to get the point in a string from the attribute "transform-origin"
+    //! Function to get the point in a string from the attribute "transform-origin".
+    //! @param origin The given string from the attribute.
+    //! @return The point to be used as transformation origin.
     Point t_origin(string origin){
         istringstream in(origin);
         int x, y;
@@ -24,7 +26,9 @@ namespace svg
         return o;
     }
 
-    // Function to get the transformation and corresponding value from the attribute "transform"
+    //! Function to get the transformation and corresponding value from the attribute "transform".
+    //! @param t The given string from the attribute.
+    //! @return A pair, with the first element being the transformation to perform, and the second it's value.
     pair<string, string> t_and_value(string t){
         std::replace(t.begin(), t.end(), ',', ' ');
         size_t startPos = t.find('(');
@@ -39,8 +43,11 @@ namespace svg
         return p;
     }
 
-    // Function called to translate a shape 
-    void shape_translate(string shape, SVGElement*& svg_element, string value){
+    //! Function called to translate a shape.
+    //! @param svg_element The pointer to the shape that will be modified.
+    //! @param value The string containing the value of the transformation.
+    void shape_translate(SVGElement*& svg_element, string value){
+        
         // For Polylines and Polygons translate all points in vector
         // For Ellipses it's only required to translate the center, as it is defined by center and radius (and color)
 
@@ -49,6 +56,8 @@ namespace svg
         int x, y;
         in >> x >> y;
         Point t = {x,y};
+
+        string shape = svg_element -> get_name();
 
         // Apply the transformation
         if(shape == "ellipse" or shape == "circle"){
@@ -73,12 +82,17 @@ namespace svg
         }
     }
 
-    // Function called to rotate a shape 
-    void shape_rotate(string shape, SVGElement*& svg_element, string value, Point origin){
+    // Function called to rotate a shape.
+    //! @param svg_element The pointer to the shape that will be modified.
+    //! @param value The string containing the value of the transformation.
+    //! @param origin The point that will be the transformation origin - Default is (0,0).
+    void shape_rotate(SVGElement*& svg_element, string value, Point origin = {0,0}){
 
         // Getting the angle to rotate
         int angle;
         std::istringstream(value) >> angle;
+
+        string shape = svg_element -> get_name();
 
         // Apply the transformation
         if(shape == "ellipse" or shape == "circle"){
@@ -103,13 +117,18 @@ namespace svg
         } 
     }
     
-    // Function called to scale a shape 
-    void shape_scale(string shape, SVGElement*& svg_element, string value, Point origin){
+    // Function called to scale a shape.
+    //! @param svg_element The pointer to the shape that will be modified.
+    //! @param value The string containing the value of the transformation.
+    //! @param origin The point that will be the transformation origin - Default is (0,0).
+    void shape_scale(SVGElement*& svg_element, string value, Point origin = {0,0}){
         // Scale all points for polygons and polylines, for ellipses scale the center as well as the radius
 
         // Getting the scaling factor
         int factor;
         std::istringstream(value) >> factor;
+
+        string shape = svg_element -> get_name();
 
         // Apply the transformation
         if(shape == "ellipse" or shape == "circle"){
@@ -134,7 +153,13 @@ namespace svg
             else{svg_element = new Polyline(points, c);}        // Creating new svg_element with the updated points
         } 
     }
-
+    
+    // Function to recursively process nested groups.
+    //! @param group The pointer to the group node.
+    //! @param parent_group A vector of SVGElement pointers that contains the previously stored elements.
+    //! @param group_transformation A string that has the transformation to apply to all group childs (If any).
+    //! @param group_origin A point to be used as origin in rotate/scale transformations (If any) - Default is (0,0).
+    //! @param group_id The id that refers to the group (If any).
     void groups(XMLElement *group,vector<SVGElement*>& parent_group,string group_transformation = "", Point group_origin = {0,0}, string group_id = ""){
         // Process the current group
 
@@ -172,7 +197,6 @@ namespace svg
                     id = "";    // No id
                 }
 
-                // Function to recursively process nested groups
                 groups(child,group_elements,transformation_, o,id);
             }
             // Process other shapes within the group
@@ -297,13 +321,13 @@ namespace svg
 
                     // Apply the corresponding operation
                     if(transformation == "translate"){
-                        shape_translate(shape, svg_element, value_);
+                        shape_translate(svg_element, value_);
                     }
                     else if(transformation == "rotate"){
-                        shape_rotate(shape, svg_element, value_, o);
+                        shape_rotate(svg_element, value_, o);
                     }
                     else if(transformation == "scale"){
-                        shape_scale(shape, svg_element, value_, o);
+                        shape_scale(svg_element, value_, o);
                     }
                 }
                 group_elements.push_back(svg_element);
@@ -353,13 +377,13 @@ namespace svg
 
                     for(auto& e : c){
                         if(transformation == "translate"){
-                            shape_translate(e -> get_name(), e, value_);
+                            shape_translate( e, value_);
                         }
                         else if(transformation == "rotate"){
-                            shape_rotate(e -> get_name(), e, value_, o);
+                            shape_rotate(e, value_, o);
                         }
                         else if(transformation == "scale"){
-                            shape_scale(e -> get_name(), e, value_, o);
+                            shape_scale(e, value_, o);
                         }
                     }
                 }
@@ -397,13 +421,13 @@ namespace svg
         }
         for(auto& element : group_elements) {
             if(gp == "translate"){
-                shape_translate(element -> get_name(), element, value_);
+                shape_translate(element, value_);
             }
             else if(gp == "rotate"){
-                shape_rotate(element -> get_name(), element, value_, group_origin);
+                shape_rotate(element, value_, group_origin);
             }
             else if(gp == "scale"){
-                shape_scale(element -> get_name(), element, value_, group_origin);
+                shape_scale(element, value_, group_origin);
             }
             parent_group.push_back(element);
         }
@@ -420,6 +444,10 @@ namespace svg
         }
     }
 
+    //! The function that will traverse to the svg format file and read all the elements, storing them in the vector svg_elements
+    //! @param svg_file The name of the .svg file
+    //! @param dimensions A point with the dimensions of the image
+    //! @param svg_elements The vector with dynamically allocated elements to represent the image 
     void readSVG(const string& svg_file, Point& dimensions, vector<SVGElement *>& svg_elements)
     {
         XMLDocument doc;
@@ -465,7 +493,6 @@ namespace svg
                     id = "";    // No id
                 }
 
-                // Function to recursively process nested groups
                 groups(child,svg_elements,transformation_, o, id);
             }
             else if (shape != "use") {
@@ -594,13 +621,13 @@ namespace svg
 
                     // Apply the corresponding operation
                     if(transformation == "translate"){
-                        shape_translate(svg_element -> get_name(), svg_element, value_);
+                        shape_translate(svg_element, value_);
                     }
                     else if(transformation == "rotate"){
-                        shape_rotate(svg_element -> get_name(), svg_element, value_, o);
+                        shape_rotate(svg_element, value_, o);
                     }
                     else if(transformation == "scale"){
-                        shape_scale(svg_element -> get_name(), svg_element, value_, o);
+                        shape_scale(svg_element, value_, o);
                     }
                 }
                 svg_elements.push_back(svg_element);    // Storing the element
@@ -650,13 +677,13 @@ namespace svg
 
                     for(auto& e : c){
                         if(transformation == "translate"){
-                            shape_translate(e -> get_name(), e, value_);
+                            shape_translate(e, value_);
                         }
                         else if(transformation == "rotate"){
-                            shape_rotate(e -> get_name(), e, value_, o);
+                            shape_rotate(e, value_, o);
                         }
                         else if(transformation == "scale"){
-                            shape_scale(e -> get_name(), e, value_, o);
+                            shape_scale(e, value_, o);
                         }
                     }
                 }
