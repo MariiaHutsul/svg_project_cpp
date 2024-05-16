@@ -12,10 +12,12 @@ using namespace std; // New
 
 namespace svg 
 {
+    // Base class for all SVG elements
     class SVGElement
     {
 
     public:
+        // Methods to be implemented by derived classes
         SVGElement();
         virtual ~SVGElement();
         virtual void draw(PNGImage &img) const = 0;
@@ -37,11 +39,17 @@ namespace svg
     void convert(const std::string &svg_file,
                  const std::string &png_file);
 
+
+    // Ellipse class derived from SVGElement
     class Ellipse : public SVGElement
     {
     public:
+        // Constructor initializing fill color, center point and radius
         Ellipse(const Color &fill, const Point &center, const Point &radius);
+        // Destructor
         ~Ellipse() override final;
+
+        // Overridden methods from SVGElement
         void draw(PNGImage &img) const override;
         Color get_color() override final{return fill;};
         Point get_center() override final{return center;};
@@ -56,11 +64,16 @@ namespace svg
         Point radius;
     };
 
+    // Polyline class derived from SVGElement
     class Polyline : public SVGElement
     {
     public:
+        // Constructor initializing points and stroke color
         Polyline(const std::vector<Point> &points, const Color& stroke);
+        // Destructor
         ~Polyline() override final;
+
+        // Overridden methods from SVGElement
         void draw(PNGImage &img) const override;
         Color get_color() override final{return stroke;};
         std::vector<Point> get_points() override final{return points;};
@@ -74,11 +87,16 @@ namespace svg
         Color stroke;
     };
 
+    // Polygon class derived from SVGElement
     class Polygon : public SVGElement
     {
     public:
+        // Constructor initializing points and fill color
         Polygon(const std::vector<Point> &points, const Color &fill);
+        // Destructor
         ~Polygon() override final;
+
+        // Overridden methods from SVGElement
         void draw(PNGImage &img) const override;
         Color get_color() override final{return fill;};
         std::vector<Point> get_points() override final{return points;};
